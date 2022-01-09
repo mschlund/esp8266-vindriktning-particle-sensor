@@ -6,7 +6,7 @@
 #include <PubSubClient.h>
 #include <WiFiManager.h>
 
-#include "Config.h"
+#include "Config_real.h"
 #include "SerialCom.h"
 #include "Types.h"
 
@@ -46,7 +46,7 @@ void saveConfigCallback() {
 }
 
 void setup() {
-    Serial.begin(115200);
+    Serial.begin(9600);
     SerialCom::setup();
 
     Serial.println("\n");
@@ -66,17 +66,24 @@ void setup() {
 
     snprintf(MQTT_TOPIC_AUTOCONF_PM25_SENSOR, 127, "homeassistant/sensor/%s/%s_pm25/config", FIRMWARE_PREFIX, identifier);
     snprintf(MQTT_TOPIC_AUTOCONF_WIFI_SENSOR, 127, "homeassistant/sensor/%s/%s_wifi/config", FIRMWARE_PREFIX, identifier);
-
+    Serial.print("Setting up Wifi...");
     WiFi.hostname(identifier);
 
     Config::load();
 
     setupWifi();
+    Serial.println("... done");
+
+    Serial.print("Setting up OTA...");
     setupOTA();
+    Serial.println("... done");
+
+    Serial.print("Configuring MQTT...");
     mqttClient.setServer(Config::mqtt_server, 1883);
     mqttClient.setKeepAlive(10);
     mqttClient.setBufferSize(2048);
     mqttClient.setCallback(mqttCallback);
+    Serial.println("... done");
 
     Serial.printf("Hostname: %s\n", identifier);
     Serial.printf("IP: %s\n", WiFi.localIP().toString().c_str());
